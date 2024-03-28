@@ -1,6 +1,5 @@
 package org.yellowhatpro.thetaskapp.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -9,41 +8,50 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.yellowhatpro.thetaskapp.data.entities.Task
 import org.yellowhatpro.thetaskapp.data.repo.TaskRepository
-import org.yellowhatpro.thetaskapp.utils.Response
+import org.yellowhatpro.thetaskapp.utils.Result
+import org.yellowhatpro.thetaskapp.utils.collectResult
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val taskRepository: TaskRepository
 ) : ViewModel() {
-    private val _tasks = MutableStateFlow<Response<List<Task>>>(Response.loading())
-    val tasks: StateFlow<Response<List<Task>>> = _tasks
 
-    private val _currentTask = MutableStateFlow<Response<Task>>(Response.loading())
-    val currentTask: StateFlow<Response<Task>> = _currentTask
+    private val _tasks = MutableStateFlow<Result<List<Task>>>(Result.loading())
+    val tasks: StateFlow<Result<List<Task>>> = _tasks
 
-    fun fetchAllTasks(){
-       viewModelScope.launch {
-           try {
-               val response = taskRepository.getTasks()
-               _tasks.value = Response.success(response)
-           } catch (e: Exception){
-               _tasks.value = Response.failure()
-           }
-       }
+    private val _currentTask = MutableStateFlow<Result<Task>>(Result.loading())
+    val currentTask: StateFlow<Result<Task>> = _currentTask
+
+    fun fetchAllTasks() {
+        viewModelScope.launch {
+            taskRepository.getTasks().collectResult(
+                onSuccess = {
+                    _tasks.value = Result.success(it)
+                },
+                onFailure = {
+                    _tasks.value = Result.failed(it.message.toString())
+                },
+                onLoading = {
+                    _tasks.value = Result.loading()
+                }
+            )
+        }
     }
 
-    fun fetchCurrentTask(taskId: Int) {
+    fun fetchTask(taskId: Int) {
         viewModelScope.launch {
-            _currentTask.value = Response.loading()
-            try {
-                val response = taskRepository.getTaskById(taskId)
-                response.let {
-                    _currentTask.value = Response.success(response)
+            taskRepository.getTaskById(taskId).collectResult(
+                onSuccess = {
+                    _currentTask.value = Result.success(it)
+                },
+                onFailure = {
+                    _currentTask.value = Result.failed(it.message.toString())
+                },
+                onLoading = {
+                    _tasks.value = Result.loading()
                 }
-            } catch (e: Exception) {
-                _currentTask.value = Response.failure()
-            }
+            )
         }
     }
 
@@ -67,8 +75,7 @@ class MainViewModel @Inject constructor(
 
     fun updateTask(task: Task) {
         viewModelScope.launch {
-            Log.d("IDDDD",task.id.toString())
-            taskRepository.updateTask(task)
+           taskRepository.updateTask(task)
         }
     }
 

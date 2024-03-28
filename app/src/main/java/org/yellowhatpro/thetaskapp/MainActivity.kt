@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
                             HomeScreen(viewModel,
                                 onClickTask = { taskId ->
-                                    viewModel.fetchCurrentTask(taskId)
+                                    viewModel.fetchTask(taskId)
                                     navController.navigate("task")
                                 }, onCreateTaskButton = {
                                     navController.navigate("create")

@@ -1,5 +1,6 @@
 package org.yellowhatpro.thetaskapp.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.yellowhatpro.thetaskapp.data.entities.Task
 import org.yellowhatpro.thetaskapp.ui.MainViewModel
-import org.yellowhatpro.thetaskapp.utils.Response
+import org.yellowhatpro.thetaskapp.utils.DoOnResult
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,21 +62,23 @@ fun HomeScreen(viewModel: MainViewModel,
         }
     ) {
         Column(Modifier.padding(it).padding(4.dp)) {
-            when (allTasksData.status) {
-                Response.Status.SUCCESS -> {
-                    allTasksData.data?.let { allTasks ->
-                        LazyVerticalStaggeredGrid(columns = StaggeredGridCells.Fixed(2)) {
-                            items(allTasks) { task ->
-                                TaskCard(task = task, onClickTask)
-                            }
+            allTasksData.DoOnResult(
+                onLoading = {
+                },
+                onSuccess = { allTasks ->
+                    LazyVerticalStaggeredGrid(columns = StaggeredGridCells.Fixed(2)) {
+                        items(allTasks) { task ->
+                            Log.d("WhatISWrong",allTasks.toString())
+                            TaskCard(task = task, onClickTask)
                         }
                     }
-                }
+                },
+                onFailure = {error->
+                    Log.d("WhatISWrong",error.message.toString())
 
-                else -> {
                     ErrorScreen()
                 }
-            }
+            )
         }
     }
 }

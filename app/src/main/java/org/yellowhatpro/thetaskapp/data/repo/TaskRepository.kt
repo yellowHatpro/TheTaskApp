@@ -1,19 +1,28 @@
 package org.yellowhatpro.thetaskapp.data.repo
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import org.yellowhatpro.thetaskapp.data.dao.TaskDao
 import org.yellowhatpro.thetaskapp.data.entities.Task
+import org.yellowhatpro.thetaskapp.utils.Result
 import javax.inject.Inject
 
 class TaskRepository @Inject constructor(
     private val taskDao: TaskDao
 ) {
-     suspend fun getTasks(): List<Task> {
-        return taskDao.getTasks()
-    }
+     suspend fun getTasks(): Flow<Result<List<Task>>> = flow {
+         emit(
+             Result {
+                 taskDao.getTasks()
+             }
+         )
+     }
 
-     suspend fun getTaskById(taskId: Int): Task {
-        return taskDao.getTaskById(taskId)
-    }
+     suspend fun getTaskById(taskId: Int): Flow<Result<Task>> = flow {
+         emit(Result {
+             taskDao.getTaskById(taskId)
+         })
+     }
 
      suspend fun deleteTaskById(taskId: Int) {
         return taskDao.deleteTaskById(taskId)
