@@ -1,16 +1,19 @@
 package org.yellowhatpro.thetaskapp.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -21,7 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -35,16 +38,16 @@ import org.yellowhatpro.thetaskapp.utils.DoOnResult
 fun HomeScreen(viewModel: MainViewModel,
                onCreateTaskButton: () -> Unit,
                onClickTask: (taskId: Int)-> Unit) {
-    val scope = rememberCoroutineScope()
     val allTasksData by viewModel.tasks.collectAsState()
 
     LaunchedEffect(key1 = allTasksData) {
-        scope.launch {
+        launch {
             viewModel.fetchAllTasks()
         }
     }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(title = {
                 Text(text = "The Task App")
@@ -61,22 +64,28 @@ fun HomeScreen(viewModel: MainViewModel,
                 })
         }
     ) {
-        Column(Modifier.padding(it).padding(4.dp)) {
+        Column(Modifier.padding(it).fillMaxSize().padding(4.dp)) {
             allTasksData.DoOnResult(
                 onLoading = {
+                    Column(modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .padding(40.dp)
+                        )
+                    }
                 },
                 onSuccess = { allTasks ->
                     LazyVerticalStaggeredGrid(columns = StaggeredGridCells.Fixed(2)) {
                         items(allTasks) { task ->
-                            Log.d("WhatISWrong",allTasks.toString())
                             TaskCard(task = task, onClickTask)
                         }
                     }
                 },
                 onFailure = {error->
-                    Log.d("WhatISWrong",error.message.toString())
-
-                    ErrorScreen()
+                    ErrorScreen(error.message?: "Something went wrong!")
                 }
             )
         }
