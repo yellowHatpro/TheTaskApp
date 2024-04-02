@@ -16,5 +16,5 @@ data class Task(
     var description: String = ""
     ) {
     val createdDateFormatted: String
-    get() = dueDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+    get() = dueDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd\nhh:mm"))
 }

@@ -21,14 +21,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import org.yellowhatpro.thetaskapp.data.entities.Task
 import org.yellowhatpro.thetaskapp.ui.MainViewModel
 import org.yellowhatpro.thetaskapp.utils.DoOnResult
@@ -38,13 +36,8 @@ import org.yellowhatpro.thetaskapp.utils.DoOnResult
 fun HomeScreen(viewModel: MainViewModel,
                onCreateTaskButton: () -> Unit,
                onClickTask: (taskId: Int)-> Unit) {
+    viewModel.fetchAllTasks()
     val allTasksData by viewModel.tasks.collectAsState()
-
-    LaunchedEffect(key1 = allTasksData) {
-        launch {
-            viewModel.fetchAllTasks()
-        }
-    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -56,7 +49,7 @@ fun HomeScreen(viewModel: MainViewModel,
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 text = {
-                       Text(text = "Add Task")
+                    Text(text = "Add Task")
                 },
                 icon = { Icon(Icons.Filled.Add, "Add Task") },
                 onClick = {
@@ -67,9 +60,11 @@ fun HomeScreen(viewModel: MainViewModel,
         Column(Modifier.padding(it).fillMaxSize().padding(4.dp)) {
             allTasksData.DoOnResult(
                 onLoading = {
-                    Column(modifier = Modifier.fillMaxSize(),
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center) {
+                        verticalArrangement = Arrangement.Center
+                    ) {
                         CircularProgressIndicator(
                             modifier = Modifier
                                 .size(100.dp)
@@ -77,23 +72,23 @@ fun HomeScreen(viewModel: MainViewModel,
                         )
                     }
                 },
-                onSuccess = { allTasks ->
-                    LazyVerticalStaggeredGrid(columns = StaggeredGridCells.Fixed(2)) {
-                        items(allTasks) { task ->
-                            TaskCard(task = task, onClickTask)
-                        }
-                    }
-                },
-                onFailure = {error->
-                    ErrorScreen(error.message?: "Something went wrong!")
+                onFailure = { error ->
+                    ErrorScreen(error.message ?: "Something went wrong!")
                 }
-            )
+            ) { allTasks ->
+                LazyVerticalStaggeredGrid(columns = StaggeredGridCells.Fixed(2)) {
+                    items(allTasks) { task ->
+                        TaskCard(task = task, onClickTask)
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun TaskCard(task: Task, onClickTask: (taskId: Int) -> Unit) {
+fun TaskCard(task: Task,
+             onClickTask: (taskId: Int) -> Unit) {
     Column(
         modifier = Modifier
             .padding(4.dp)
@@ -105,6 +100,6 @@ fun TaskCard(task: Task, onClickTask: (taskId: Int) -> Unit) {
     ) {
         Text(text = task.name)
         Text(text = task.description)
-        Text(text = task.dueDate.toString())
+        Text(text = task.createdDateFormatted)
     }
 }

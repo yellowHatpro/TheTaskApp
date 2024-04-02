@@ -6,12 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import org.yellowhatpro.thetaskapp.ui.MainViewModel
 import org.yellowhatpro.thetaskapp.ui.screens.CreateTaskScreen
 import org.yellowhatpro.thetaskapp.ui.screens.HomeScreen
@@ -25,7 +27,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val viewModel = hiltViewModel<MainViewModel>()
             val navController = rememberNavController()
-
+            val scope = rememberCoroutineScope()
             TheTaskAppTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -38,8 +40,10 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
                             HomeScreen(viewModel,
                                 onClickTask = { taskId ->
-                                    viewModel.fetchTask(taskId)
-                                    navController.navigate("task")
+                                    scope.launch {
+                                        viewModel.fetchTask(taskId)
+                                        navController.navigate("task")
+                                    }
                                 }, onCreateTaskButton = {
                                     navController.navigate("create")
                                 })
@@ -54,7 +58,14 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         composable("task") {
-                            UpdateTaskScreen(viewModel) {
+                            UpdateTaskScreen(viewModel, onDeleteTask = {taskId ->
+                                viewModel.deleteTask(taskId)
+                                navController.navigate("home") {
+                                    popUpTo(navController.graph.id) {
+                                        inclusive = true
+                                    }
+                                }
+                            }) {
                                 navController.navigate("home") {
                                     popUpTo(navController.graph.id) {
                                         inclusive = true

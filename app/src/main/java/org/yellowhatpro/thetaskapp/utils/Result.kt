@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import retrofit2.Response
 
@@ -28,7 +30,7 @@ sealed class Result<T> {
     }
 }
 
-//TO emit
+//Emit this from Repository
 suspend inline fun <T> Result(
     dispatcher: CoroutineDispatcher? = null,
     crossinline block: suspend () -> T
@@ -44,7 +46,7 @@ suspend inline fun <T> Result(
     }
 }
 
-// Use this in repository, to collect the Response from Api Service, and emit Flow Results
+// Use this in Repository, to collect the Response from Api Service, and emit Flow Results
 suspend inline fun <T> Response<T>.collectResult(
     crossinline onSuccess: suspend (T) -> Unit,
     crossinline onFailure: suspend (errorMessage: String) -> Unit
@@ -58,13 +60,19 @@ suspend inline fun <T> Response<T>.collectResult(
     }
 }
 
-// Usually in ViewModels and set the values of states
+// Usually in ViewModels and set the values of states according to Result Type
 suspend inline fun <T> Flow<Result<T>>.collectResult(
+    dispatcher: CoroutineDispatcher = Dispatchers.IO,
     crossinline onLoading: () -> Unit = {},
     crossinline onSuccess: suspend (T) -> Unit,
     crossinline onFailure: suspend (e: Exception) -> Unit
 ) {
-    this.collect {
+    this
+        .flowOn(dispatcher)
+        .catch {
+            onFailure(Exception(it.message))
+        }
+        .collect {
         when (it) {
             is Result.Success -> withContext(Dispatchers.Main) { onSuccess(it.data) }
             is Result.Loading -> withContext(Dispatchers.Main) { onLoading() }
@@ -73,6 +81,7 @@ suspend inline fun <T> Flow<Result<T>>.collectResult(
     }
 }
 
+// Use in Screens to show data according to Result Type
 @Composable
 fun <T> Result<T>.DoOnResult(
      onLoading: @Composable () -> Unit = {},

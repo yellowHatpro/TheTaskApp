@@ -3,6 +3,7 @@ package org.yellowhatpro.thetaskapp.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -39,8 +40,8 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun fetchTask(taskId: Int) {
-        viewModelScope.launch {
+    suspend fun fetchTask(taskId: Int) {
+        val fetchTaskJob = viewModelScope.launch {
             taskRepository.getTaskById(taskId).collectResult(
                 onSuccess = {
                     _currentTask.value = Result.success(it)
@@ -53,6 +54,7 @@ class MainViewModel @Inject constructor(
                 }
             )
         }
+        fetchTaskJob.join()
     }
 
     fun deleteTask(taskId: Int){
@@ -78,5 +80,4 @@ class MainViewModel @Inject constructor(
            taskRepository.updateTask(task)
         }
     }
-
 }

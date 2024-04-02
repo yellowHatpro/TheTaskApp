@@ -1,21 +1,27 @@
 package org.yellowhatpro.thetaskapp.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -46,8 +52,9 @@ fun CreateTaskScreen(
 @Composable
 fun UpdateTaskScreen(
     viewModel: MainViewModel,
-    navigateBack: () -> Unit
-) {
+    onDeleteTask: (taskId: Int) -> Unit,
+    navigateBack: () -> Unit,
+    ) {
     val currentTask by viewModel.currentTask.collectAsState()
     currentTask.DoOnResult(onFailure = {
         ErrorScreen(error = it.message.toString())
@@ -62,7 +69,12 @@ fun UpdateTaskScreen(
             )
         }
     }) {
-        CreateUpdateTaskCommonScreen("Update", it, navigateBack, viewModel)
+        CreateUpdateTaskCommonScreen("Update",
+            it,
+            navigateBack,
+            viewModel){ taskId ->
+            onDeleteTask(taskId)
+        }
     }
 }
 
@@ -71,7 +83,9 @@ fun UpdateTaskScreen(
 fun CreateUpdateTaskCommonScreen(method: String,
                                  task: Task? = null,
                                  navigateBack: () -> Unit,
-                                 viewModel: MainViewModel) {
+                                 viewModel: MainViewModel,
+                                 onDeleteTask: (taskId: Int) -> Unit = {},
+                               ) {
     var taskName by rememberSaveable {
         mutableStateOf(task?.name ?: "")
     }
@@ -95,7 +109,7 @@ fun CreateUpdateTaskCommonScreen(method: String,
             onClick = {
                 when (method) {
                     "Update" -> {
-                        task?.let {task->
+                        task?.let { task ->
                             task.description = taskDescription
                             task.name = taskName
                             viewModel.updateTask(task)
@@ -116,31 +130,52 @@ fun CreateUpdateTaskCommonScreen(method: String,
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(4.dp)
+                .padding(4.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = taskName,
-                onValueChange = { taskName = it },
-                placeholder = {
-                    when (method) {
-                        "Create" -> Text(text = "Title of the Task")
+            Column(Modifier
+                .fillMaxHeight(0.92F)
+                .fillMaxWidth()) {
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = taskName,
+                    onValueChange = { taskName = it },
+                    placeholder = {
+                        when (method) {
+                            "Create" -> Text(text = "Title of the Task")
+                        }
+                    },
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(380.dp),
+                    value = taskDescription,
+                    onValueChange = { taskDescription = it },
+                    placeholder = {
+                        when (method) {
+                            "Create" -> Text(text = "Description")
+                        }
+                    },
+                )
+            }
+            Row(Modifier.padding(2.dp)) {
+                if (method == "Update") {
+                    IconButton(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.secondaryContainer,
+                                shape = CircleShape),
+                        onClick = {
+                        task?.id?.let { onDeleteTask(it) }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Delete,
+                            contentDescription = "Delete Task"
+                        )
                     }
-                },
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(380.dp),
-                value = taskDescription,
-                onValueChange = { taskDescription = it },
-                placeholder = {
-                    when (method) {
-                        "Create" -> Text(text = "Description")
-                    }
-                },
-            )
+                }
+            }
         }
     }
 }
