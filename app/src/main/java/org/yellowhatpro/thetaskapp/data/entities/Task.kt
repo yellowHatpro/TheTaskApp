@@ -10,10 +10,10 @@ import java.time.format.DateTimeFormatter
 data class Task(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val name: String = "",
-    val dueDate: LocalDateTime = LocalDateTime.now(),
-    val isCompleted: Boolean = false,
-    val description: String = ""
+    var name: String = "",
+    var dueDate: LocalDateTime = LocalDateTime.now(),
+    var isCompleted: Boolean = false,
+    var description: String = ""
     ) {
     val createdDateFormatted: String
     get() = dueDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))

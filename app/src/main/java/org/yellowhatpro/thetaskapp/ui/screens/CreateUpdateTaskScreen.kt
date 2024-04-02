@@ -95,7 +95,11 @@ fun CreateUpdateTaskCommonScreen(method: String,
             onClick = {
                 when (method) {
                     "Update" -> {
-                        task?.let { viewModel.updateTask(it) }
+                        task?.let {task->
+                            task.description = taskDescription
+                            task.name = taskName
+                            viewModel.updateTask(task)
+                        }
                     }
 
                     "Create" -> {
